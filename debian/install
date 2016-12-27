@@ -1,0 +1,7 @@
+usr/bin/*
+usr/share/doc/applications/*
+usr/share/man/man1/*
+usr/share/pomodoro-bash/ascii/*
+usr/share/pomodoro-bash/audio/*
+usr/share/pomodoro-bash/config/*
+usr/share/pomodoro-bash/images/*

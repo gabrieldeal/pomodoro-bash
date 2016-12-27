@@ -1,0 +1,35 @@
+#!/usr/bin/env sh
+
+# This installs pomodoro-bash from the git repo source.
+
+SOURCE_DIR="$1"
+DEST_DIR="$2"
+DEFAULT_DEST_DIR="/usr"
+[ -z "$DEST_DIR" ] && DEST_DIR="$DEFAULT_DEST_DIR"
+
+if [ -z "$SOURCE_DIR" -o -z "$DEST_DIR" ]; then
+    echo "Usage: $0 SOURCE_DIR [ DEST_DIR ]" 1>&2
+    exit 1
+fi
+
+while read source_glob; do
+    dest_dir=$(dirname "$source_glob" | sed "s,^usr,$DEST_DIR,")
+    install -d "$dest_dir" || exit 1
+
+    for source_file in $source_glob; do
+	[ -f "$source_file" ] || continue
+
+	dest_file=$(echo "$source_file" | sed "s,^usr,$DEST_DIR,")
+	cp --preserve=mode "$source_file" "$dest_file" || exit 1
+    done
+done < "$SOURCE_DIR/debian/install"
+
+rc_file="$HOME/.pomodoro-bash"
+if [ ! -e "$rc_file" ]; then
+    cp "$SOURCE_DIR/build/config/.pomodoro-bash" "$HOME"
+    [ "$DEFAULT_DEST_DIR" != "$DEST_DIR" ] && printf "\nPOMO_ROOT=\"$DEST_DIR\"\n" >>"$rc_file"
+fi
+
+echo "Successfully installed"
+
+exit 0

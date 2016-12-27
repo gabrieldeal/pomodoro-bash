@@ -1,0 +1,6 @@
+[Desktop Entry]
+Exec=gnome-terminal --title="Pomodoro Bash" --geometry=85x40 --execute /usr/bin/pomodoro-bash -p
+Icon=/usr/share/pomodoro-bash/images/tomato.png
+Name=Pomodoro Bash
+Type=Application
+Version=0.0.1

@@ -1,0 +1,4 @@
+# See the top of /usr/bin/pomodoro-bash for all config settings.
+
+# %s is replaced with "dnd" when working and with "chat" when not working:
+# POMO_SET_CHAT_STATUS_COMMAND="YOUR-COMMAND --status=%s"

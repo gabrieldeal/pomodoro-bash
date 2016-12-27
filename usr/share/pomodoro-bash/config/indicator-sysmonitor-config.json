@@ -1,0 +1,11 @@
+{
+    "on_startup": false,
+    "sensors": {
+	"pomodoro": [
+	    "",
+            "cat \\"%s\\""
+	 ]
+    },
+    "interval": 2.0,
+    "custom_text": "{pomodoro}"
+}

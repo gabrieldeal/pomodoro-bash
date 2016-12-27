@@ -1,0 +1,517 @@
+#!/usr/bin/env sh
+# ð
+
+# shellcheck disable=SC2086
+# SC2086 is "double quote to prevent globbing and word splitting". That check gives too many false positives.
+
+read_configuration() {
+    local config_file="$HOME/.pomodoro-bash"
+    [ -e "$config_file" ] && . "$config_file"
+
+    : ${POMO_ROOT:="/usr"}
+    : ${POMO_WORK_SECONDS:=$(( 25 * 60 ))}
+    : ${POMO_BREAK_SECONDS:=$(( 5 * 60 ))}
+    : ${POMO_LOG_FILE:=/dev/null}
+
+    # No default value for:
+    #   POMO_DEBUG
+    #   POMO_SET_CHAT_STATUS_COMMAND
+
+    # ASCII art from dogsay. MIT License. Copyright (c) 2015 Forrest Fleming.
+    # https://github.com/ffleming/dogsay
+    : ${POMO_WORKING_LARGE_BODY:="$POMO_ROOT/share/pomodoro-bash/ascii/large-trex.txt"}
+    : ${POMO_WORKING_MEDIUM_BODY:="$POMO_ROOT/share/pomodoro-bash/ascii/medium-trex.txt"}
+    : ${POMO_TAKING_A_BREAK_LARGE_BODY:="$POMO_ROOT/share/pomodoro-bash/ascii/large-puppy.txt"}
+    : ${POMO_TAKING_A_BREAK_MEDIUM_BODY:="$POMO_ROOT/share/pomodoro-bash/ascii/medium-puppy.txt"}
+
+    # From figlet:
+    : ${POMO_WORKING_LARGE_BANNER:="$POMO_ROOT/share/pomodoro-bash/ascii/banner-large-working.txt"}
+    : ${POMO_TAKING_A_BREAK_LARGE_BANNER:="$POMO_ROOT/share/pomodoro-bash/ascii/banner-large-taking-a-break.txt"}
+    : ${POMO_WAITING_TO_START_LARGE_BANNER:="$POMO_ROOT/share/pomodoro-bash/ascii/banner-large-waiting-to-start.txt"}
+
+    # "FREE RED TOMATO CLIP ART" by OpenGameArt.org is public domain.
+    # http://www.clipartlord.com/category/food-clip-art/vegetables-clip-art/tomato-clip-art/
+    : ${POMO_NOTIFICATION_ICON:="$POMO_ROOT/share/pomodoro-bash/images/tomato.ico"}
+    : ${POMO_WORKING_ICON:="$POMO_ROOT/share/pomodoro-bash/images/tomato.png"}
+
+    # Public domain dog. https://thenounproject.com/term/dog/364/
+    : ${POMO_TAKING_A_BREAK_ICON:="$POMO_ROOT/share/pomodoro-bash/images/puppy.svg"}
+
+    # I made this one.
+    : ${POMO_WAITING_TO_START_ICON:="$POMO_ROOT/share/pomodoro-bash/images/circle-question.svg"}
+
+    initialize_notification_configuration
+    initialize_audio_configuration
+}
+
+initialize_notification_configuration() {
+    [ -n "$POMO_NOTIFICATION_COMMAND" ] && return
+
+    if find_command osascript >/dev/null; then
+	POMO_NOTIFICATION_COMMAND="osascript -e 'display notification \"%s\" with title \"Pomodoro\"'"
+    elif find_command notify-send >/dev/null; then
+	POMO_NOTIFICATION_COMMAND="notify-send -i \"$POMO_NOTIFICATION_ICON\" Pomodoro \"%s\""
+    elif find_command notifu >/dev/null; then
+	POMO_NOTIFICATION_COMMAND="notifu /m \"%s\" /p Pomodoro /d 5000"
+    fi
+}
+
+initialize_audio_configuration() {
+    local audio_type=
+    initialize_audio_player_configuration "madplay" "mpg123" "mpg321" "afplay" && audio_type="mp3"
+    initialize_audio_player_configuration "paplay" "sndfile-play" "beep" && audio_type="ogg"
+    if [ -z "$POMO_AUDIO_PLAYER_COMMAND" ] && find_command vlc >/dev/null; then
+	POMO_AUDIO_PLAYER_COMMAND="vlc_play_sound \"%s\""
+	audio_type="mp3"
+    fi
+
+    # "Text Message Alert 3 Sound" by Daniel Simion is licensed under CC BY 3.0.
+    # http://soundbible.com/2156-Text-Message-Alert-3.html
+    # https://creativecommons.org/licenses/by/3.0/
+    : ${POMO_WAITING_TO_START_AUDIO_FILE:="$POMO_ROOT/share/pomodoro-bash/audio/alert.$audio_type"}
+
+    # "Barking of a dog" by Wikimedia Commons is licensed under CC BY 3.0.
+    # https://commons.wikimedia.org/wiki/File:Barking_of_a_dog.ogg
+    # https://creativecommons.org/licenses/by/3.0/
+    : ${POMO_TAKING_A_BREAK_AUDIO_FILE:="$POMO_ROOT/share/pomodoro-bash/audio/Barking Puppy.$audio_type"}
+
+    # "Tyrannosaurus Rex Roar Sound" from soundbible.com is public domain.
+    # http://soundbible.com/1748-Tyrannosaurus-Rex-Roar.html
+    : ${POMO_WORKING_AUDIO_FILE:="$POMO_ROOT/share/pomodoro-bash/audio/Roaring T-Rex.$audio_type"}
+}
+
+initialize_audio_player_configuration() {
+    [ -n "$POMO_AUDIO_PLAYER_COMMAND" ] && return 1
+
+    local audio_player="$(find_command "$@")"
+    [ -z "$audio_player" ] && return 1
+
+    POMO_AUDIO_PLAYER_COMMAND="\"$audio_player\" \"%s\""
+    return 0
+}
+
+vlc_play_sound() {
+    local sound_file="$1"
+
+    # CD to the sound directory because VLC can't handle UNIX-style paths.
+    (cd "$(dirname "$sound_file")" \
+	 && vlc --intf dummy --play-and-exit "$(basename "$sound_file")" >>"$POMO_LOG_FILE" 2>&1)
+}
+
+find_command() {
+    for command in "$@"; do
+	if $POMO_FIND_COMMAND "$command" >/dev/null 2>&1; then
+	    printf "%s" "$command"
+	    return 0
+	fi
+    done
+    return 1
+}
+
+fail() {
+    echo "$*" 1>&2
+    exit 1
+}
+
+read_command_line_options() {
+    while [ "$#" -gt 0 ]; do
+	case "$1" in
+	    -w)
+		POMO_WORK_SECONDS="$2"
+		shift
+		;;
+	    -b)
+		POMO_BREAK_SECONDS="$2"
+		shift
+		;;
+	    -p)
+		PROMPT_TO_START=1
+		;;
+	    -h|*)
+		printf "pomodoro-bash [ -w WORK_SECONDS ] [ -b BREAK_SECONDS ] [ -p ]\n"
+		printf "\nSee the top of %s for configuration hints.\n" "$0"
+		exit 0
+		;;
+	esac
+	shift
+    done
+
+    validate_timer_duration "$POMO_WORK_SECONDS"
+    validate_timer_duration "$POMO_BREAK_SECONDS"
+}
+
+validate_timer_duration() {
+    local duration_seconds="$1"
+
+    is_integer "$duration_seconds" || fail "Duration '$duration_seconds' is not an integer!"
+    [ "$duration_seconds" -ge $(( 60 * 60 )) ] && fail "Duration '$duration_seconds' seconds is too long!"
+}
+
+is_integer() {
+    local value="$1"
+
+    [ -n "${value##*[!0-9]*}" ]
+    return $?
+}
+
+count_lines() { echo "$1" | wc -l; }
+count_columns() {
+    local text="$1"
+
+    local IFS='
+'
+    local columns=0
+    for line in $text; do
+	[ ${#line} -gt $columns ] && columns=${#line}
+    done
+    echo "$columns"
+}
+
+does_text_fit_screen() {
+    local text="$1"
+    local screen_lines="$2"
+    local screen_columns="$3"
+
+    local text_lines="$(count_lines "$text")"
+    local text_columns="$(count_columns "$text")"
+    [ "$screen_lines" -ge "$text_lines" ] && [ "$screen_columns" -ge "$text_columns" ]
+    return $?
+}
+
+LAST_SCREEN_COLUMNS=0
+LAST_SCREEN_LINES=0
+LAST_SCREEN_TYPE=0
+update_screen_category() {
+    local screen_type="$1"
+    shift # We use $@ below
+
+    local screen_lines="$(tput lines)"
+    local screen_columns="$(tput cols)"
+
+    # Trapping the WINCH signal was causing random freezes when I resized the screen on Ubuntu 14.04.
+    if [ "$LAST_SCREEN_LINES" -eq "$screen_lines" ] && [ "$LAST_SCREEN_COLUMNS" -eq "$screen_columns" ] && [ "$LAST_SCREEN_TYPE" = "$screen_type" ]; then
+	return
+    fi
+    LAST_SCREEN_COLUMNS="$screen_columns"
+    LAST_SCREEN_LINES="$screen_lines"
+    LAST_SCREEN_TYPE="$screen_type"
+
+    for size_category in large medium small; do
+	local output="$("print_${screen_type}_screen" "$size_category" "$@")"
+	if does_text_fit_screen "$output" "$screen_lines" "$screen_columns"; then
+	   SIZE_CATEGORY="$size_category"
+	   return
+	fi
+    done
+
+    SIZE_CATEGORY=tiny
+}
+
+print_tiny_break_body() { printf "\$time\n"; }
+print_small_break_body() { print_tiny_break_body; }
+print_medium_break_body() { cat "$POMO_TAKING_A_BREAK_MEDIUM_BODY"; }
+print_large_break_body() { cat "$POMO_TAKING_A_BREAK_LARGE_BODY"; }
+
+print_tiny_work_body() { printf "\$time\n"; }
+print_small_work_body() { print_tiny_work_body; }
+print_medium_work_body() { cat "$POMO_WORKING_MEDIUM_BODY"; }
+print_large_work_body() { cat "$POMO_WORKING_LARGE_BODY"; }
+
+print_tiny_break_banner() { printf "Break!\n"; }
+print_small_break_banner() { print_large_break_banner; }
+print_medium_break_banner() { print_large_break_banner; }
+print_large_break_banner() { cat "$POMO_TAKING_A_BREAK_LARGE_BANNER"; }
+
+print_tiny_ready_banner() { printf "Ready?\n"; }
+print_small_ready_banner() { print_large_ready_banner; }
+print_medium_ready_banner() { print_large_ready_banner; }
+print_large_ready_banner() { cat "$POMO_WAITING_TO_START_LARGE_BANNER"; }
+
+print_tiny_work_banner() { printf "Focus!\n"; }
+print_small_work_banner() { print_large_work_banner; }
+print_medium_work_banner() { print_large_work_banner; }
+print_large_work_banner() { cat "$POMO_WORKING_LARGE_BANNER"; }
+
+print_screen() {
+    local screen_type="$1"
+    shift
+
+    update_screen_category "$screen_type" "$@"
+    "print_${screen_type}_screen" "$SIZE_CATEGORY" "$@"
+}
+
+print_ready_screen() {
+    local size_category="$1"
+
+    "print_${size_category}_ready_banner"
+    printf "\n%s[s] " "$INTERACTIVE_COMMANDS_PROMPT"
+}
+
+print_break_screen() { print_countdown_screen "break" "$@"; }
+print_work_screen() { print_countdown_screen "work" "$@"; }
+print_countdown_screen() {
+    local screen_type="$1"
+    local size_category="$2"
+    local seconds_left="$3"
+    local command_result="$4"
+
+    local banner="$("print_${size_category}_${screen_type}_banner")"
+    local body="$(print_countdown_body "$screen_type" "$size_category" "$seconds_left")"
+
+    clear_screen
+    printf "%s\n" "$banner"
+    printf "%s\n" "$body"
+    printf "%s %s" "$INTERACTIVE_COMMANDS_PROMPT" "$command_result"
+}
+
+print_countdown_body() {
+    local screen_type="$1"
+    local size_category="$2"
+    local seconds_left="$3"
+
+    local formatted_time_left="$(format_seconds_as_hh_mm "$seconds_left")"
+    formatted_time_left="$(start_text_standout_mode)$formatted_time_left$(end_text_standout_mode)"
+
+    # Using sed instead of variable substitutions because some of the
+    # ASCII art contains special shell characters.
+    "print_${size_category}_${screen_type}_body" | sed "s/\$time/$formatted_time_left/" | grep -v '^#'
+}
+
+format_seconds_as_hh_mm() {
+    local seconds="$1"
+
+    local minutes=$(( seconds % 3600 / 60 ))
+    local seconds=$(( seconds % 60 ))
+    printf "%02d:%02d" $minutes $seconds
+}
+
+do_countdown() {
+    local screen_type="$1"
+    local seconds="$2"
+    local icon="$3"
+
+    hide_cursor
+
+    local command_result=
+    local now=$(date +%s)
+    local end_date=$(( now + seconds ))
+    while [ "$end_date" -gt "$now" ]; do
+	local seconds_left=$(( end_date - now ))
+	local minutes_left=$(( (seconds_left + 60 - 1) / 60 ))
+	set_application_indicator "$icon" "${minutes_left}m"
+
+	print_screen "$screen_type" "$seconds_left" "$command_result"
+
+	local wait_seconds=1
+	local command="$(read_char $wait_seconds)"
+	if [ -n "$command" ]; then
+	    discard_stdin
+	    handle_interactive_command "$command"
+	    command_result="Huh? "
+	fi
+
+	now=$(date +%s)
+    done
+}
+do_work_countdown() {
+    play_audio "$POMO_WORKING_AUDIO_FILE"
+    set_chat_status "dnd"
+    do_countdown "work" "$POMO_WORK_SECONDS" "$POMO_WORKING_ICON"
+}
+do_break_countdown() {
+    play_audio "$POMO_TAKING_A_BREAK_AUDIO_FILE"
+    set_chat_status "chat"
+    do_countdown "break" "$POMO_BREAK_SECONDS" "$POMO_TAKING_A_BREAK_ICON"
+}
+
+prompt_to_start() {
+    play_audio "$POMO_WAITING_TO_START_AUDIO_FILE"
+    set_application_indicator "$POMO_WAITING_TO_START_ICON" ""
+
+    clear_screen
+    print_screen "ready"
+
+    local default_command=s
+    while true; do
+	discard_stdin
+
+	show_cursor
+	local command="$(read_char | tr -d '\r\n')"
+	hide_cursor
+
+	[ -z "$command" ] && command="$default_command"
+
+	handle_interactive_command "$command"
+	printf "\nHuh? "
+    done
+}
+
+handle_interactive_command() {
+    local command="$1"
+
+    case "$command" in
+	s)
+	    clear_screen
+	    printf "\nStarting a new pomo..."
+	    main_loop
+	    ;;
+	q)
+	    tear_down
+	    exit 0
+	    ;;
+	b)
+	    clear_screen
+	    printf "\nTaking a break..."
+	    do_break_countdown
+	    prompt_to_start
+	    main_loop
+	    ;;
+    esac
+
+    return 1
+}
+
+read_char() {
+    local timeout_seconds="$1"
+
+    local timeout_args="${timeout_seconds:+min 0 time $((timeout_seconds * 10))}"
+    local old_settings="$(stty -g)"
+    stty raw isig -echo $timeout_args
+    dd bs=1 count=1 2>/dev/null
+    stty "$old_settings"
+}
+
+discard_stdin() {
+    while [ -n "$(read_char 0)" ]; do
+	:
+    done
+}
+
+start_text_standout_mode() { tput smso; }
+end_text_standout_mode() { tput rmso; }
+hide_cursor() { tput civis; }
+show_cursor() { tput cnorm; }
+clear_screen() { tput clear; }
+
+run_command() {
+    local command_format="$1"
+    local command_argument="$2"
+
+    # shellcheck disable=SC2059
+    # SC2059 is "don't use variables in printf format.
+    local command="$(printf "$command_format" "$command_argument")"
+
+    # Don't log the command normally since it may have an auth token in it.
+    [ -n "$POMO_DEBUG" ] && echo "Running: $command" >>"$POMO_LOG_FILE"
+
+    eval "$command" >>"$POMO_LOG_FILE" 2>&1 &
+}
+
+send_notification() {
+    local message="$1"
+
+    [ -n "$POMO_NOTIFICATION_COMMAND" ] && run_command "$POMO_NOTIFICATION_COMMAND" "$message"
+}
+
+set_chat_status() {
+    local new_status="$1"
+
+    [ -n "$POMO_SET_CHAT_STATUS_COMMAND" ] && run_command "$POMO_SET_CHAT_STATUS_COMMAND" "$new_status"
+}
+
+play_audio() {
+    local audio_file="$1"
+
+    if [ -n "$POMO_AUDIO_PLAYER_COMMAND" ]; then
+	run_command "$POMO_AUDIO_PLAYER_COMMAND" "$audio_file"
+    else
+	printf ''
+    fi
+}
+
+set_application_indicator() {
+    local icon_path="$1"
+    local message="$2"
+
+    [ -n "$message" ] && message="$message "
+    [ -n "$APPLICATION_INDICATOR_COMMAND" ] && echo "${message}USE_ICON:$icon_path" >"$APPLICATION_INDICATOR_ICON_FILE"
+}
+
+tear_down_application_indicator() {
+    [ -z "$APPLICATION_INDICATOR_COMMAND" ] && return
+
+    rm -f "$APPLICATION_INDICATOR_ICON_FILE" "$APPLICATION_INDICATOR_CONFIG_FILE"
+    [ -n "$APPLICATION_INDICATOR_PID" ] && kill "$APPLICATION_INDICATOR_PID"
+}
+
+# https://github.com/fossfreedom/indicator-sysmonitor
+initialize_application_indicator() {
+    APPLICATION_INDICATOR_COMMAND="$(find_command indicator-sysmonitor)"
+    APPLICATION_INDICATOR_CONFIG_FILE="${TMPDIR:-/tmp}/$USER-${$}-pomodoro-indicator-config.txt"
+    APPLICATION_INDICATOR_ICON_FILE="${TMPDIR:-/tmp}/$USER-${$}-pomodoro-indicator-icon.txt"
+    APPLICATION_INDICATOR_CONFIG_TEMPLATE_FILE="$POMO_ROOT/share/pomodoro-bash/config/indicator-sysmonitor-config.json"
+
+    [ -z "$APPLICATION_INDICATOR_COMMAND" ] && return
+
+    local json_config_format="$(cat "$APPLICATION_INDICATOR_CONFIG_TEMPLATE_FILE")"
+
+    # shellcheck disable=SC2059
+    # SC2059 is "don't use variables in printf format.
+    printf "$json_config_format" "$APPLICATION_INDICATOR_ICON_FILE" >"$APPLICATION_INDICATOR_CONFIG_FILE"
+
+    printf "Starting..." >"$APPLICATION_INDICATOR_ICON_FILE"
+    "$APPLICATION_INDICATOR_COMMAND" --config="$APPLICATION_INDICATOR_CONFIG_FILE" >>"$POMO_LOG_FILE" 2>&1 &
+    APPLICATION_INDICATOR_PID="$!"
+}
+
+initialize_find_command() {
+    [ -n "$POMO_FIND_COMMAND" ] && return
+
+    local command=
+    for command in "command -v" "which" "type"; do
+	if $command sh >/dev/null 2>&1; then
+	    POMO_FIND_COMMAND="$command"
+	    return
+	fi
+    done
+
+    fail "Unable to figure out how to find commands. Define the FIND_COMMAND env var."
+}
+
+initialize() {
+    ORIGINAL_STTY_SETTINGS="$(stty -g)"
+    INTERACTIVE_COMMANDS_PROMPT="Start new pomo (s), take a break (b), quit (q)? "
+
+    initialize_find_command
+    read_configuration
+    read_command_line_options "$@"
+
+    trap tear_down INT TERM HUP
+
+    initialize_application_indicator
+}
+
+tear_down() {
+    [ -n "$ORIGINAL_STTY_SETTINGS" ] && stty $ORIGINAL_STTY_SETTINGS
+    show_cursor
+    tear_down_application_indicator
+    set_chat_status "chat"
+    printf "\nBye!\n"
+    exit 0
+}
+
+main_loop() {
+    while true; do
+	do_work_countdown
+
+	send_notification "Take a break!"
+	do_break_countdown
+
+	send_notification "Break over, man!"
+	prompt_to_start
+    done
+}
+
+initialize "$@"
+[ -n "$PROMPT_TO_START" ] && prompt_to_start
+main_loop

@@ -1,0 +1,31 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: pomodoro-bash
+Source: https://github.com/gabrielmdeal/pomodoro-bash
+
+Files: *
+Copyright: 2016, Gabriel M. Deal
+License: MIT
+
+Files: usr/share/pomodoro-bash/ascii/large-trex.txt usr/share/pomodoro-bash/ascii/medium-trex.txt usr/share/pomodoro-bash/ascii/large-puppy.txt usr/share/pomodoro-bash/ascii/medium-puppy.txt
+Copyright: 2015 Forrest Fleming
+License: MIT
+
+Files: usr/share/pomodoro-bash/images/tomato.ico usr/share/pomodoro-bash/images/tomato.png
+Copyright: none
+License: public-domain
+
+Files: usr/share/pomodoro-bash/images/puppy.svg
+Copyright: none
+License: public-domain
+
+Files: usr/share/pomodoro-bash/audio/alert.mp3 usr/share/pomodoro-bash/audio/alert.mp3
+Copyright: Daniel Simion
+License: CC-BY
+
+Files: usr/share/pomodoro-bash/audio/*puppy.mp3 usr/share/pomodoro-bash/audio/*puppy.ogg
+Copyright: Wikimedia Commons
+License: CC-BY
+
+Files: usr/share/pomodoro-bash/audio/*t-rex.mp3 usr/share/pomodoro-bash/audio/*t-rex.ogg
+Copyright: none
+License: public-domain

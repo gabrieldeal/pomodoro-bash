@@ -1,0 +1,35 @@
+.TH pomodoro-bash 1
+
+.SH NAME
+pomodoro-bash \- A timer for the pomodoro technique
+.SH SYNOPSIS
+.B pomodoro-bash
+[\fB\-w\fR \fIWORK_SECONDS\fR]
+[\fB\-b\fR \fIBREAK_SECONDS\fR]
+[\fB\-p\fR]
+
+.SH DESCRIPTION
+.B pomodoro-bash
+helps manage a 25 minute work interval followed by a 5 minute break.  It displays a count down for the work interval and the break.  At the end of each count down, it plays a sound and pops up a toast notification.  It displays a status icon in the indicator/status menu, allowing co-workers to look over your shoulder to see how long before your work interval is finished and they are allowed to bug you.
+
+.SH OPTIONS
+.TP
+.BR \-w " " \fIWORK_SECONDS\fR
+Set the length of the work interval in seconds.
+Default is 25 minutes.
+.TP
+.BR \-b " " \fIBREAK_SECONDS\fR
+Set the length of the break in seconds.
+Default is 5 minutes.
+.TP
+.BR \-p
+Upon startup, prompt before starting the first work interval.
+
+.SH FILES
+.I ~/.pomodoro-bash
+.RS
+The user configuration file.
+.RE
+
+.SH BUGS
+According to Wikipedia, the creator of the Pomodoro Technique encourages the use of a low-tech mechanical timer -- not some stupid shell script.
