@@ -19,6 +19,7 @@ cd ${APP}-$SOURCE_VERSION
 package_version="0gabrielxppa1"
 dch -v "$SOURCE_VERSION-$package_version"
 dch -r --no-force-save-on-release
+git commit -m "Debian change log entry for v$SOURCE_VERSION" debian/changelog && git push
 git tag -a "v$SOURCE_VERSION" -m "New version v$SOURCE_VERSION" && git push origin --tags
 
 debuild clean && debuild -us -uc && lintian -EvIL +pedantic && sudo apt-get remove -y pomodoro-bash && sudo dpkg -i ../pomodoro-bash_$SOURCE_VERSION-${package_version}_all.deb && /usr/bin/pomodoro-bash
