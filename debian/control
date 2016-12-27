@@ -11,6 +11,6 @@ Homepage: https://github.com/gabrielmdeal/pomodoro-bash
 Package: pomodoro-bash
 Architecture: all
 Depends: ${misc:Depends}, dash
-Recommends: libnotify-bin, pulseaudio-utils
+Recommends: libnotify-bin, pulseaudio-utils, gnome-terminal
 Description: Pomodoro timer
  A pomodoro timer for people with UNIX command-line powers.
