@@ -1,3 +1,10 @@
+pomodoro-bash (0.0.2-0gabrielxppa1) trusty; urgency=medium
+
+  * Fix location of GNOME desktop file
+  * Fix capitalization of audio filenames
+
+ -- Gabriel M. Deal <gabriel.m.deal@gmail.com>  Tue, 27 Dec 2016 15:05:22 -0800
+
 pomodoro-bash (0.0.1-0gabrielxppa1) trusty; urgency=low
 
   * Initial release
