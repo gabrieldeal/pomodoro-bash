@@ -1,5 +1,5 @@
 usr/bin/*
-usr/share/doc/applications/*
+usr/share/applications/*
 usr/share/man/man1/*
 usr/share/pomodoro-bash/ascii/*
 usr/share/pomodoro-bash/audio/*
