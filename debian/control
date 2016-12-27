@@ -1,0 +1,16 @@
+Source: pomodoro-bash
+Section: utils
+Priority: optional
+Maintainer: Gabriel M. Deal <gabriel.m.deal@gmail.com>
+Build-Depends: debhelper (>=9)
+Standards-Version: 3.9.6
+Homepage: https://github.com/gabrielmdeal/pomodoro-bash
+#Vcs-Git: git://anonscm.debian.org/collab-maint/pomodoro-bash.git
+#Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/pomodoro-bash.git
+
+Package: pomodoro-bash
+Architecture: all
+Depends: ${misc:Depends}, dash
+Recommends: libnotify-bin, pulseaudio-utils
+Description: Pomodoro timer
+ A pomodoro timer for people with UNIX command-line powers.

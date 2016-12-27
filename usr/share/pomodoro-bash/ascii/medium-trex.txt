@@ -1,0 +1,8 @@
+# ASCII art from dogsay. MIT License. Copyright (c) 2015 Forrest Fleming.
+# https://github.com/ffleming/dogsay
+		   __   +-------+
+		  / _) /| $time |
+	 _.----._/ /    +-------+
+       /          /
+.--__/  (  | (  |'
+ '-__..-'|_|--|_|
