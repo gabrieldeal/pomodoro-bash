@@ -73,11 +73,11 @@ initialize_audio_configuration() {
     # "Barking of a dog" by Wikimedia Commons is licensed under CC BY 3.0.
     # https://commons.wikimedia.org/wiki/File:Barking_of_a_dog.ogg
     # https://creativecommons.org/licenses/by/3.0/
-    : ${POMO_TAKING_A_BREAK_AUDIO_FILE:="$POMO_ROOT/share/pomodoro-bash/audio/Barking Puppy.$audio_type"}
+    : ${POMO_TAKING_A_BREAK_AUDIO_FILE:="$POMO_ROOT/share/pomodoro-bash/audio/barking puppy.$audio_type"}
 
     # "Tyrannosaurus Rex Roar Sound" from soundbible.com is public domain.
     # http://soundbible.com/1748-Tyrannosaurus-Rex-Roar.html
-    : ${POMO_WORKING_AUDIO_FILE:="$POMO_ROOT/share/pomodoro-bash/audio/Roaring T-Rex.$audio_type"}
+    : ${POMO_WORKING_AUDIO_FILE:="$POMO_ROOT/share/pomodoro-bash/audio/roaring t-rex.$audio_type"}
 }
 
 initialize_audio_player_configuration() {
