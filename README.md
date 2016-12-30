@@ -8,8 +8,17 @@ It includes:
 * optional support for:
   * pop-up notifications
   * audio notifications (like the roar of a T-Rex and the bark of a puppy)
-  * status icon in the notification area
+  * status icon in the notification area with the number of minutes left
   * changing your chat status (e.g., HipChat or Slack)
+
+# Running
+
+On the command line:
+```
+$ pomodoro-bash
+```
+
+Or search for "pomodoro" in Unity/GNOME launcher.
 
 # Installation
 
@@ -25,17 +34,17 @@ sudo apt-get install pomodoro-bash
 
 1. Clone or download this git repo
 1. cd into the downloaded repo directory
-1. Run `./build/bin/install .`.  Optionally pass the target directory as a second argument (e.g., `/usr/local`).
+1. Run `./build/bin/install $PWD`  Optionally pass the target directory as a second argument (e.g., ` ./build/bin/install $PWD /usr/local`).
 
 
 # Installing optional features
 
-## Ubuntu and friends
+## Ubuntu
 
 To enable pop-up notifications, install this:
 * `sudo apt install libnotify-bin`
 
-To enable audio notifications, install one of these:
+To enable audio notifications, install *one* of these:
 * `sudo apt install pulseaudio-utils`
 * `sudo apt install sndfile-programs`
 * or `mpg123` or `madplay`
@@ -56,7 +65,7 @@ To enable audio notifications, install one of these:
 * madplay (available from https://www.cygwin.com/)
 
 To enable the status icon in the notification area, install this:
-* I don't know how.
+* I haven't figured out an easy way to support this.
 
 To make a pretty shortcut in the Start Menu:
 1. Create a shortcut with a target like one of these:
