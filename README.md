@@ -67,9 +67,8 @@ To enable audio notifications, install one of these:
 To enable the status icon in the notification area, install this:
 * I haven't figured out an easy way to support this.
 
-To make a pretty shortcut in the Start Menu:
-1. Create a shortcut with a target like one of these:
- * C:\cygwin\bin\mintty.exe -i C:\Users\Gabriel\config\local\share\pomodoro-bash\images\tomato13.ico --title "Pomodoro Bash" -o Scrollbar=None -o ScrollbackLines=0  -e C:\Users\Gabriel\bin\cygwin-bootstrap pomodoro-bash
+The command for a Start Menu shortcut:
+* C:\cygwin\bin\mintty.exe --hold error -i C:\cygwin\usr\share\pomodoro-bash\images\tomato.ico --title "Pomodoro Bash" -o Scrollbar=None -o ScrollbackLines=0  -e /usr/bin/bash -il pomodoro-bash
 
 ## MacOS
 
