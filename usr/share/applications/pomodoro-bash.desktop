@@ -1,5 +1,5 @@
 [Desktop Entry]
-Exec=gnome-terminal --title="Pomodoro Bash" --geometry=85x40 --execute /usr/bin/pomodoro-bash -p
+Exec=xterm -bg WebMaroon -T "Pomodoro Bash" -geometry 85x40 -e /usr/bin/pomodoro-bash -p -m
 Icon=/usr/share/pomodoro-bash/images/tomato.png
 Keywords=pomodoro timer
 Name=Pomodoro Bash

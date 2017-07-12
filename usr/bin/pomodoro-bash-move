@@ -1,0 +1,31 @@
+#!/usr/bin/env sh
+
+[ -z "$1" ] && pomodoro_window_name="Pomodoro Bash" || pomodoro_window_name="$1"
+
+fail() {
+    echo "$@" 1>&2
+    exit 1
+}
+
+assert_command_exists() {
+    command -v "$1" >/dev/null 2>&1 || fail "Missing the '$1' command"
+}
+
+assert_command_exists "xdotool"
+assert_command_exists "wmctrl"
+
+active_window_id="$(xdotool getwindowfocus)"
+active_window_position="$(xdotool getwindowgeometry $active_window_id | grep Position | sed 's/.* \([0-9]*\),\([0-9]*\) .*/\1 \2/')"
+
+[ -z "$active_window_position" ] && fail "Unable to get the position of the active window"
+
+pomodoro_window_id="$(wmctrl -l | grep -w "$pomodoro_window_name" | cut -d' ' -f1)"
+
+[ -z "$pomodoro_window_id" ] && fail "Unable to get the position of the '$pomodoro_window_name' window"
+
+xdotool windowmove "$pomodoro_window_id" $active_window_position \
+    && xdotool windowfocus "$pomodoro_window_id" \
+    && xdotool windowraise "$pomodoro_window_id"
+[ $? -ne 0 ] && fail "Error moving the window"
+
+exit 0

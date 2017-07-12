@@ -116,6 +116,9 @@ fail() {
 read_command_line_options() {
     while [ "$#" -gt 0 ]; do
 	case "$1" in
+	    -m)
+		POMO_MOVE_COMMAND="pomodoro-bash-move"
+		;;
 	    -w)
 		POMO_WORK_SECONDS="$2"
 		shift
@@ -411,6 +414,7 @@ send_notification() {
     local message="$1"
 
     [ -n "$POMO_NOTIFICATION_COMMAND" ] && run_command "$POMO_NOTIFICATION_COMMAND" "$message"
+    [ -n "$POMO_MOVE_COMMAND" ] && run_command "$POMO_MOVE_COMMAND"
 }
 
 set_chat_status() {
