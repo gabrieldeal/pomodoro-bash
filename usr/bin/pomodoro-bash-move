@@ -23,7 +23,8 @@ pomodoro_window_id="$(wmctrl -l | grep -w "$pomodoro_window_name" | cut -d' ' -f
 
 [ -z "$pomodoro_window_id" ] && fail "Unable to get the position of the '$pomodoro_window_name' window"
 
-xdotool windowmove "$pomodoro_window_id" $active_window_position \
+xdotool windowmap "$pomodoro_window_id" \
+    && xdotool windowmove "$pomodoro_window_id" $active_window_position \
     && xdotool windowfocus "$pomodoro_window_id" \
     && xdotool windowraise "$pomodoro_window_id"
 [ $? -ne 0 ] && fail "Error moving the window"
