@@ -1,0 +1,25 @@
+Hold=error
+Icon=/usr/share/pomodoro-bash/images/tomato.ico
+ScrollbackLines=0
+Scrollbar=None
+Title=Pomodoro Bash
+
+BackgroundColour=164,0,8
+ForegroundColour=254,254,254
+CursorColour=254,254,254
+Black=11,11,11
+BoldBlack=42,42,42
+Red=255,24,24
+BoldRed=255,179,179
+Green=24,255,24
+BoldGreen=179,255,179
+Yellow=255,255,24
+BoldYellow=255,255,179
+Blue=24,24,255
+BoldBlue=179,179,255
+Magenta=255,24,255
+BoldMagenta=255,179,255
+Cyan=24,255,255
+BoldCyan=179,255,255
+White=254,254,254
+BoldWhite=255,255,255
