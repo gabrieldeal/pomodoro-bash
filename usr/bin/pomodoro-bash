@@ -117,7 +117,7 @@ read_command_line_options() {
     while [ "$#" -gt 0 ]; do
 	case "$1" in
 	    -m)
-		POMO_MOVE_COMMAND="pomodoro-bash-move"
+		POMO_WINDOW_CONTROL_COMMAND="pomodoro-bash-xwindows-ctrl"
 		;;
 	    -w)
 		POMO_WORK_SECONDS="$2"
@@ -356,6 +356,7 @@ handle_interactive_command() {
 	s)
 	    clear_screen
 	    printf "\nStarting a new pomo..."
+	    [ -n "$POMO_WINDOW_CONTROL_COMMAND" ] && run_command "$POMO_WINDOW_CONTROL_COMMAND %s" hide
 	    main_loop
 	    ;;
 	q)
@@ -405,7 +406,7 @@ run_command() {
     local command="$(printf "$command_format" "$command_argument")"
 
     # Don't log the command normally since it may have an auth token in it.
-    [ -n "$POMO_DEBUG" ] && echo "Running: $command" >>"$POMO_LOG_FILE"
+    [ -n "$POMO_DEBUG" ] && echo "Running: $command $command_argument" >>"$POMO_LOG_FILE"
 
     eval "$command" >>"$POMO_LOG_FILE" 2>&1 &
 }
@@ -414,7 +415,7 @@ send_notification() {
     local message="$1"
 
     [ -n "$POMO_NOTIFICATION_COMMAND" ] && run_command "$POMO_NOTIFICATION_COMMAND" "$message"
-    [ -n "$POMO_MOVE_COMMAND" ] && run_command "$POMO_MOVE_COMMAND"
+    [ -n "$POMO_WINDOW_CONTROL_COMMAND" ] && run_command "$POMO_WINDOW_CONTROL_COMMAND %s" show
 }
 
 set_chat_status() {

@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 
-[ -z "$1" ] && pomodoro_window_name="Pomodoro Bash" || pomodoro_window_name="$1"
+command="$1"
+[ -n "$2" ] && pomodoro_window_name="$2" || pomodoro_window_name="Pomodoro Bash"
 
 fail() {
     echo "$@" 1>&2
@@ -24,11 +25,20 @@ pomodoro_window_ids="$(wmctrl -l | grep -w "$pomodoro_window_name" | cut -d' ' -
 
 for pomodoro_window_id in $pomodoro_window_ids
 do
-    xdotool windowmap "$pomodoro_window_id" \
-	&& xdotool windowmove "$pomodoro_window_id" $active_window_position \
-	&& xdotool windowfocus "$pomodoro_window_id" \
-	&& xdotool windowraise "$pomodoro_window_id"
-    [ $? -ne 0 ] && fail "Error moving the window"
+    if [ "$command" = "show" ]
+    then
+	xdotool windowmap "$pomodoro_window_id" \
+	    && xdotool windowmove "$pomodoro_window_id" $active_window_position \
+	    && xdotool windowraise "$pomodoro_window_id" \
+	    && xdotool windowfocus "$pomodoro_window_id"
+	[ $? -ne 0 ] && fail "Error moving window ID '$pomodoro_window_id'"
+    elif [ "$command" = "hide" ]
+    then
+	xdotool windowminimize "$pomodoro_window_id"
+	[ $? -ne 0 ] && fail "Error minimizing window ID '$pomodoro_window_id'"
+    else
+	fail "Unrecognized command '$command'"
+    fi
 done
 
 exit 0
