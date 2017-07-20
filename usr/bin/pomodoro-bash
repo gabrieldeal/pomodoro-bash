@@ -439,7 +439,9 @@ set_application_indicator() {
     local message="$2"
 
     [ -n "$message" ] && message="$message "
-    [ -n "$APPLICATION_INDICATOR_COMMAND" ] && echo "${message}USE_ICON:$icon_path" >"$APPLICATION_INDICATOR_ICON_FILE"
+    [ -n "$APPLICATION_INDICATOR_COMMAND" ] \
+	&& echo "${message}USE_ICON:$icon_path" >"$APPLICATION_INDICATOR_ICON_FILE.tmp" \
+	&& mv "$APPLICATION_INDICATOR_ICON_FILE.tmp" "$APPLICATION_INDICATOR_ICON_FILE"
 }
 
 tear_down_application_indicator() {
