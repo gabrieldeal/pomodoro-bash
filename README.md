@@ -52,6 +52,9 @@ To enable audio notifications, install *one* of these:
 To enable the status icon in the notification area, install this:
 * https://github.com/fossfreedom/indicator-sysmonitor
 
+To enable auto minimizing and activating of the pomo window (-m option), install this:
+* `sudo apt install xdotool wmctrl`
+
 ## Windows with Cygwin
 
 Install Cygwin: https://www.cygwin.com/
@@ -66,6 +69,9 @@ To enable audio notifications, install one of these:
 
 To enable the status icon in the notification area, install this:
 * I haven't figured out an easy way to support this.
+
+To enable auto minimizing and activating of the pomo window (-m option), install this:
+* https://github.com/gabrielmdeal/window-control
 
 The command for a Start Menu shortcut:
 * C:\cygwin\bin\mintty -C /usr/share/pomodoro-bash/config/pomodoro-bash.minttyrc -e /usr/bin/bash -il pomodoro-bash
