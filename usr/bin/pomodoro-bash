@@ -56,6 +56,16 @@ initialize_notification_configuration() {
     fi
 }
 
+initialize_window_control_configuration() {
+    [ -n "$POMO_WINDOW_CONTROL_COMMAND" ] && return
+
+    if find_command xdotool >/dev/null; then
+	POMO_WINDOW_CONTROL_COMMAND="pomodoro-bash-xwindows-ctrl %s"
+    elif find_command WindowControl >/dev/null; then
+	POMO_WINDOW_CONTROL_COMMAND="WindowControl %s"
+    fi
+}
+
 initialize_audio_configuration() {
     local audio_type=
     initialize_audio_player_configuration "madplay" "mpg123" "mpg321" "afplay" && audio_type="mp3"
@@ -117,7 +127,7 @@ read_command_line_options() {
     while [ "$#" -gt 0 ]; do
 	case "$1" in
 	    -m)
-		POMO_WINDOW_CONTROL_COMMAND="pomodoro-bash-xwindows-ctrl"
+		initialize_window_control_configuration
 		;;
 	    -w)
 		POMO_WORK_SECONDS="$2"
@@ -356,7 +366,7 @@ handle_interactive_command() {
 	s)
 	    clear_screen
 	    printf "\nStarting a new pomo..."
-	    [ -n "$POMO_WINDOW_CONTROL_COMMAND" ] && run_command "$POMO_WINDOW_CONTROL_COMMAND %s" hide
+	    [ -n "$POMO_WINDOW_CONTROL_COMMAND" ] && run_command "$POMO_WINDOW_CONTROL_COMMAND" hide
 	    main_loop
 	    ;;
 	q)
@@ -415,7 +425,7 @@ send_notification() {
     local message="$1"
 
     [ -n "$POMO_NOTIFICATION_COMMAND" ] && run_command "$POMO_NOTIFICATION_COMMAND" "$message"
-    [ -n "$POMO_WINDOW_CONTROL_COMMAND" ] && run_command "$POMO_WINDOW_CONTROL_COMMAND %s" show
+    [ -n "$POMO_WINDOW_CONTROL_COMMAND" ] && run_command "$POMO_WINDOW_CONTROL_COMMAND" show
 }
 
 set_chat_status() {
