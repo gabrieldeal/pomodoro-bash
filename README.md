@@ -32,10 +32,10 @@ sudo apt-get install pomodoro-bash
 
 ## Manually
 
-1. Clone or download this git repo
+1. If running Windows, then install Cygwin. https://www.cygwin.com/
+1. Clone or download this git repo. https://github.com/gabrielmdeal/pomodoro-bash/archive/master.zip
 1. cd into the downloaded repo directory
 1. Run `./build/bin/install $PWD`  Optionally pass the target directory as a second argument (e.g., ` ./build/bin/install $PWD /usr/local`).
-
 
 # Installing optional features
 
@@ -56,8 +56,6 @@ To enable auto minimizing and activating of the pomo window (-m option), install
 * `sudo apt install xdotool wmctrl`
 
 ## Windows with Cygwin
-
-Install Cygwin: https://www.cygwin.com/
 
 To enable pop-up notifications, install one of these:
 * http://vaskovsky.net/notify-send/
