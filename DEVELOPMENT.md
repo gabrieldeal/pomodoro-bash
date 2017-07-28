@@ -41,6 +41,10 @@ Finally, copy the packge to other distributions: https://launchpad.net/~gabrielx
 * `desktop-file-validate src/share/doc/applications/*.desktop`
 * `lintian -EvIL +pedantic`
 
+# Converting to ico
+
+`convert -density 384 -background transparent circle-question.svg -define icon:auto-resize -colors 256 circle-question.ico`
+
 # Debugging
 
 Under bash and *in a file*:
