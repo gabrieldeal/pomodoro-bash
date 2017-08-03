@@ -63,8 +63,6 @@ initialize_window_control_configuration() {
 	POMO_WINDOW_CONTROL_COMMAND="pomodoro-bash-xwindows-ctrl %s"
     elif find_command WindowControl >/dev/null; then
 	POMO_WINDOW_CONTROL_COMMAND="WindowControl %s"
-    elif find_command WindowControl_x64 >/dev/null; then
-	POMO_WINDOW_CONTROL_COMMAND="WindowControl_x64 %s"
     fi
 }
 
