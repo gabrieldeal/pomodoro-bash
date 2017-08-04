@@ -77,6 +77,10 @@ initialize_audio_configuration() {
 	POMO_AUDIO_PLAYER_COMMAND="vlc_play_sound \"%s\""
 	audio_type="mp3"
     fi
+    if [ -z "$POMO_AUDIO_PLAYER_COMMAND" ] && find_command WindowControl >/dev/null; then
+        POMO_AUDIO_PLAYER_COMMAND="WindowControl playAudio \"\$(cygpath -m \"%s\")\""
+        audio_type="mp3"
+    fi
 
     # "Text Message Alert 3 Sound" by Daniel Simion is licensed under CC BY 3.0.
     # http://soundbible.com/2156-Text-Message-Alert-3.html
