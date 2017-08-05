@@ -1,0 +1,8 @@
+language: shell
+
+install:
+  - sudo apt-get --quiet update
+  - sudo apt-get --quiet install devscripts
+
+script:
+  - build/bin/run-tests

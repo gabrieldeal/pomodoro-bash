@@ -1,5 +1,7 @@
 # Pomodoro Bash
 
+[![Build Status](https://travis-ci.org/gabrielmdeal/pomodoro-bash.svg?branch=master)](https://travis-ci.org/gabrielmdeal/pomodoro-bash)
+
 A pomodoro timer for people with UNIX command-line powers.
 
 It includes:

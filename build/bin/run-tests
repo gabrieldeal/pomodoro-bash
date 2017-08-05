@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+checkbashisms --posix --force usr/bin/pomodoro-bash 2>&1 | grep "^possible bashism" | grep -v '(local '
+if [ $? -eq 1 ]; then
+    exit 0
+else
+    exit 1
+fi
