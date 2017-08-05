@@ -431,14 +431,14 @@ run_command() {
     # Don't log the command normally since it may have an auth token in it.
     [ -n "$POMO_DEBUG" ] && echo "Running: $command" >>"$POMO_LOG_FILE"
 
-    eval "$command" >>"$POMO_LOG_FILE" 2>&1 &
+    eval "$command" </dev/null >>"$POMO_LOG_FILE" 2>&1 &
 }
 
 run_command_noformat() {
     # Don't log the command normally since it may have an auth token in it.
     [ -n "$POMO_DEBUG" ] && echo "Running: $@" >>"$POMO_LOG_FILE"
 
-    "$@" >>"$POMO_LOG_FILE" 2>&1 &
+    "$@" </dev/null >>"$POMO_LOG_FILE" 2>&1 &
 }
 
 send_notification() {
