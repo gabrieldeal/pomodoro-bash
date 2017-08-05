@@ -63,9 +63,9 @@ initialize_window_control_configuration() {
     [ -n "$POMO_WINDOW_CONTROL_COMMAND" ] && return
 
     if find_command xdotool >/dev/null; then
-	POMO_WINDOW_CONTROL_COMMAND="pomodoro-bash-xwindows-ctrl %s"
+	POMO_WINDOW_CONTROL_COMMAND="pomodoro-bash-xwindows-ctrl '%s' '%s'"
     elif find_command WindowControl >/dev/null; then
-	POMO_WINDOW_CONTROL_COMMAND="WindowControl %s"
+	POMO_WINDOW_CONTROL_COMMAND="WindowControl '%s' '%s'"
     fi
 }
 
