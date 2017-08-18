@@ -12,6 +12,7 @@ read_configuration() {
     : ${POMO_WORK_SECONDS:=$(( 25 * 60 ))}
     : ${POMO_BREAK_SECONDS:=$(( 5 * 60 ))}
     : ${POMO_LOG_FILE:=/dev/null}
+    : ${POMO_TRAY_NAME:="Pomodoro Bash"}
 
     # No default value for:
     #   POMO_DEBUG
@@ -32,13 +33,13 @@ read_configuration() {
     # "FREE RED TOMATO CLIP ART" by OpenGameArt.org is public domain.
     # http://www.clipartlord.com/category/food-clip-art/vegetables-clip-art/tomato-clip-art/
     : ${POMO_NOTIFICATION_ICON:="$POMO_ROOT/share/pomodoro-bash/images/tomato.ico"}
-    : ${POMO_WORKING_ICON:="$POMO_ROOT/share/pomodoro-bash/images/tomato.png"}
+    : ${POMO_WORKING_ICON:="$POMO_ROOT/share/pomodoro-bash/images/tomato.ico"}
 
     # Public domain dog. https://thenounproject.com/term/dog/364/
-    : ${POMO_TAKING_A_BREAK_ICON:="$POMO_ROOT/share/pomodoro-bash/images/puppy.svg"}
+    : ${POMO_TAKING_A_BREAK_ICON:="$POMO_ROOT/share/pomodoro-bash/images/puppy.ico"}
 
     # I made this one.
-    : ${POMO_WAITING_TO_START_ICON:="$POMO_ROOT/share/pomodoro-bash/images/circle-question.svg"}
+    : ${POMO_WAITING_TO_START_ICON:="$POMO_ROOT/share/pomodoro-bash/images/circle-question.ico"}
 
     initialize_notification_configuration
     initialize_audio_configuration
@@ -48,11 +49,13 @@ initialize_notification_configuration() {
     [ -n "$POMO_NOTIFICATION_COMMAND" ] && return
 
     if find_command osascript >/dev/null; then
-	POMO_NOTIFICATION_COMMAND="osascript -e 'display notification \"%s\" with title \"Pomodoro\"'"
+	POMO_NOTIFICATION_COMMAND="send_notification_via_oascript"
     elif find_command notify-send >/dev/null; then
-	POMO_NOTIFICATION_COMMAND="notify-send -i \"$POMO_NOTIFICATION_ICON\" Pomodoro \"%s\""
+	POMO_NOTIFICATION_COMMAND="send_notification_via_notify_send"
+    elif find_command WindowControl >/dev/null; then
+	POMO_NOTIFICATION_COMMAND="send_notification_via_window_control"
     elif find_command notifu >/dev/null; then
-	POMO_NOTIFICATION_COMMAND="notifu /m \"%s\" /p Pomodoro /d 5000"
+	POMO_NOTIFICATION_COMMAND="send_notification_via_notifu"
     fi
 }
 
@@ -60,11 +63,9 @@ initialize_window_control_configuration() {
     [ -n "$POMO_WINDOW_CONTROL_COMMAND" ] && return
 
     if find_command xdotool >/dev/null; then
-	POMO_WINDOW_CONTROL_COMMAND="pomodoro-bash-xwindows-ctrl %s"
+	POMO_WINDOW_CONTROL_COMMAND="pomodoro-bash-xwindows-ctrl '%s' '%s'"
     elif find_command WindowControl >/dev/null; then
-	POMO_WINDOW_CONTROL_COMMAND="WindowControl %s"
-    elif find_command WindowControl_x64 >/dev/null; then
-	POMO_WINDOW_CONTROL_COMMAND="WindowControl_x64 %s"
+	POMO_WINDOW_CONTROL_COMMAND="WindowControl '%s' '%s'"
     fi
 }
 
@@ -75,6 +76,10 @@ initialize_audio_configuration() {
     if [ -z "$POMO_AUDIO_PLAYER_COMMAND" ] && find_command vlc >/dev/null; then
 	POMO_AUDIO_PLAYER_COMMAND="vlc_play_sound \"%s\""
 	audio_type="mp3"
+    fi
+    if [ -z "$POMO_AUDIO_PLAYER_COMMAND" ] && find_command WindowControl >/dev/null; then
+        POMO_AUDIO_PLAYER_COMMAND="WindowControl playAudio \"\$(cygpath -m \"%s\")\""
+        audio_type="mp3"
     fi
 
     # "Text Message Alert 3 Sound" by Daniel Simion is licensed under CC BY 3.0.
@@ -310,10 +315,16 @@ do_countdown() {
     local command_result=
     local now=$(date +%s)
     local end_date=$(( now + seconds ))
+    local previous_message
     while [ "$end_date" -gt "$now" ]; do
 	local seconds_left=$(( end_date - now ))
 	local minutes_left=$(( (seconds_left + 60 - 1) / 60 ))
-	set_application_indicator "$icon" "${minutes_left}m"
+	local message="${minutes_left}m"
+
+	if [ "$previous_message" != "$message" ]; then
+	    previous_message="$message"
+	    "$SET_APPLICATION_INDICATOR" "$icon" "$message"
+	fi
 
 	print_screen "$screen_type" "$seconds_left" "$command_result"
 
@@ -341,7 +352,7 @@ do_break_countdown() {
 
 prompt_to_start() {
     play_audio "$POMO_WAITING_TO_START_AUDIO_FILE"
-    set_application_indicator "$POMO_WAITING_TO_START_ICON" ""
+    run_command_noformat "$SET_APPLICATION_INDICATOR" "$POMO_WAITING_TO_START_ICON" ""
 
     clear_screen
     print_screen "ready"
@@ -368,7 +379,7 @@ handle_interactive_command() {
 	s)
 	    clear_screen
 	    printf "\nStarting a new pomo..."
-	    [ -n "$POMO_WINDOW_CONTROL_COMMAND" ] && run_command "$POMO_WINDOW_CONTROL_COMMAND" hide
+	    [ -n "$POMO_WINDOW_CONTROL_COMMAND" ] && run_command "$POMO_WINDOW_CONTROL_COMMAND" hide "$POMO_TRAY_NAME"
 	    main_loop
 	    ;;
 	q)
@@ -411,23 +422,43 @@ clear_screen() { tput clear; }
 
 run_command() {
     local command_format="$1"
-    local command_argument="$2"
+    shift
 
     # shellcheck disable=SC2059
     # SC2059 is "don't use variables in printf format.
-    local command="$(printf "$command_format" "$command_argument")"
+    local command="$(printf "$command_format" "$@")"
 
     # Don't log the command normally since it may have an auth token in it.
-    [ -n "$POMO_DEBUG" ] && echo "Running: $command $command_argument" >>"$POMO_LOG_FILE"
+    [ -n "$POMO_DEBUG" ] && echo "Running: $command" >>"$POMO_LOG_FILE"
 
-    eval "$command" >>"$POMO_LOG_FILE" 2>&1 &
+    eval "$command" </dev/null >>"$POMO_LOG_FILE" 2>&1 &
+}
+
+run_command_noformat() {
+    # Don't log the command normally since it may have an auth token in it.
+    [ -n "$POMO_DEBUG" ] && echo "Running: $@" >>"$POMO_LOG_FILE"
+
+    "$@" </dev/null >>"$POMO_LOG_FILE" 2>&1 &
 }
 
 send_notification() {
     local message="$1"
+    local icon="$2"
 
-    [ -n "$POMO_NOTIFICATION_COMMAND" ] && run_command "$POMO_NOTIFICATION_COMMAND" "$message"
-    [ -n "$POMO_WINDOW_CONTROL_COMMAND" ] && run_command "$POMO_WINDOW_CONTROL_COMMAND" show
+    [ -n "$POMO_NOTIFICATION_COMMAND" ] && "$POMO_NOTIFICATION_COMMAND" "$message" "$POMO_NOTIFICATION_ICON"
+    [ -n "$POMO_WINDOW_CONTROL_COMMAND" ] && run_command "$POMO_WINDOW_CONTROL_COMMAND" show "$POMO_TRAY_NAME"
+}
+send_notification_via_oascript() {
+    run_command_noformat osascript -e "display notification \"$1\" with title \"Pomodoro\""
+}
+send_notification_via_notify_send() {
+    run_command_noformat notify-send -i "$2" Pomodoro "$1"
+}
+send_notification_via_notifu() {
+    run_command_noformat notifu /m "$1" /p Pomodoro /d 5000 /i "$(cygpath -m "$2")"
+}
+send_notification_via_window_control() {
+    run_command_noformat "WindowControl" "displayTrayNotification" "$POMO_TRAY_NAME" "$1" "$(cygpath -m "$2")"
 }
 
 set_chat_status() {
@@ -446,7 +477,7 @@ play_audio() {
     fi
 }
 
-set_application_indicator() {
+set_application_indicator_fossfreedom() {
     local icon_path="$1"
     local message="$2"
 
@@ -455,17 +486,44 @@ set_application_indicator() {
 	&& echo "${message}USE_ICON:$icon_path" >"$APPLICATION_INDICATOR_ICON_FILE.tmp" \
 	&& mv "$APPLICATION_INDICATOR_ICON_FILE.tmp" "$APPLICATION_INDICATOR_ICON_FILE"
 }
+set_application_indicator_window_control() {
+    local icon="$1"
+    local message="$2"
 
-tear_down_application_indicator() {
+    run_command_noformat "WindowControl" "updateTray" "$POMO_TRAY_NAME" "$message" "$(cygpath -m "$icon")"
+}
+
+tear_down_application_indicator_fossfreedom() {
     [ -z "$APPLICATION_INDICATOR_COMMAND" ] && return
 
     rm -f "$APPLICATION_INDICATOR_ICON_FILE" "$APPLICATION_INDICATOR_CONFIG_FILE"
     [ -n "$APPLICATION_INDICATOR_PID" ] && kill "$APPLICATION_INDICATOR_PID"
 }
+tear_down_application_indicator_window_control() {
+    run_command_noformat WindowControl closeTray "$POMO_TRAY_NAME"
+}
 
-# https://github.com/fossfreedom/indicator-sysmonitor
 initialize_application_indicator() {
-    APPLICATION_INDICATOR_COMMAND="$(find_command indicator-sysmonitor)"
+    if find_command "indicator-sysmonitor" >/dev/null; then
+	APPLICATION_INDICATOR_COMMAND="indicator-sysmonitor"
+	initialize_application_indicator_fossfreedom
+    elif find_command WindowControl >/dev/null; then
+	initialize_application_indicator_window_control
+    else
+	TEAR_DOWN_APPLICATION_INDICATOR="true"
+	SET_APPLICATION_INDICATOR="true"
+    fi
+}
+initialize_application_indicator_window_control() {
+    TEAR_DOWN_APPLICATION_INDICATOR="tear_down_application_indicator_window_control"
+    SET_APPLICATION_INDICATOR="set_application_indicator_window_control"
+
+    run_command_noformat "WindowControl" startTray "$POMO_TRAY_NAME" "Focus!" "$(cygpath -m "$POMO_WORKING_ICON")"
+}
+initialize_application_indicator_fossfreedom() {
+    TEAR_DOWN_APPLICATION_INDICATOR="tear_down_application_indicator_fossfreedom"
+    SET_APPLICATION_INDICATOR="set_application_indicator_fossfreedom"
+
     APPLICATION_INDICATOR_CONFIG_FILE="${TMPDIR:-/tmp}/$USER-${$}-pomodoro-indicator-config.txt"
     APPLICATION_INDICATOR_ICON_FILE="${TMPDIR:-/tmp}/$USER-${$}-pomodoro-indicator-icon.txt"
     APPLICATION_INDICATOR_CONFIG_TEMPLATE_FILE="$POMO_ROOT/share/pomodoro-bash/config/indicator-sysmonitor-config.json"
@@ -513,7 +571,7 @@ initialize() {
 tear_down() {
     [ -n "$ORIGINAL_STTY_SETTINGS" ] && stty $ORIGINAL_STTY_SETTINGS
     show_cursor
-    tear_down_application_indicator
+    "$TEAR_DOWN_APPLICATION_INDICATOR"
     set_chat_status "chat"
     printf "\nBye!\n"
     exit 0
@@ -523,10 +581,10 @@ main_loop() {
     while true; do
 	do_work_countdown
 
-	send_notification "Take a break!"
+	send_notification "Take a break!" "$POMO_TAKING_A_BREAK_ICON"
 	do_break_countdown
 
-	send_notification "Break over, man!"
+	send_notification "Break over, man!" "$POMO_WAITING_TO_START_ICON"
 	prompt_to_start
     done
 }
