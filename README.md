@@ -13,6 +13,8 @@ It includes:
   * status icon in the notification area with the number of minutes left
   * changing your chat status (e.g., HipChat or Slack)
 
+![Screenshot](./doc/screenshots/focus.png?raw=true "Screenshot")
+
 # Running
 
 On the command line:
