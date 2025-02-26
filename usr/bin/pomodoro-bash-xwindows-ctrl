@@ -28,6 +28,7 @@ do
     if [ "$command" = "show" ]
     then
 	xdotool windowmap "$pomodoro_window_id" \
+	    && xdotool windowactivate "$pomodoro_window_id" \
 	    && xdotool windowmove "$pomodoro_window_id" $active_window_position \
 	    && xdotool windowraise "$pomodoro_window_id" \
 	    && xdotool windowfocus "$pomodoro_window_id"
