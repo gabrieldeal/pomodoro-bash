@@ -164,7 +164,7 @@ validate_timer_duration() {
     local duration_seconds="$1"
 
     is_integer "$duration_seconds" || fail "Duration '$duration_seconds' is not an integer!"
-    [ "$duration_seconds" -ge $(( 60 * 60 )) ] && fail "Duration '$duration_seconds' seconds is too long!"
+    [ "$duration_seconds" -ge $(( 60 * 60 * 12 )) ] && fail "Duration '$duration_seconds' seconds is too long!"
 }
 
 is_integer() {
