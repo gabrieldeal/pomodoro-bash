@@ -39,7 +39,7 @@ sudo apt-get install pomodoro-bash
 1. If running Windows, then install Cygwin. https://www.cygwin.com/
 1. Clone or download this git repo. https://github.com/gabrielmdeal/pomodoro-bash/archive/master.zip
 1. cd into the downloaded repo directory
-1. Run `./build/bin/install $PWD`  Optionally pass the target directory as a second argument (e.g., ` ./build/bin/install $PWD /usr/local`).
+1. Run `./build/bin/install $PWD`  Optionally pass the target directory as a second argument (e.g., `./build/bin/install $PWD /usr/local`).
 
 # Installing optional features
 
@@ -56,8 +56,9 @@ To enable audio notifications, install *one* of these:
 To enable the status icon in the notification area, install this:
 * https://github.com/fossfreedom/indicator-sysmonitor
 
-To enable auto minimizing and activating of the pomo window (-m option), install this:
+To enable auto minimizing and activating of the pomo window, use the -m option and install this:
 * `sudo apt install xdotool wmctrl`
+* use Xorg instead of Wayland
 
 ## Windows with Cygwin
 
